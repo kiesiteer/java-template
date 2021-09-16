@@ -8,7 +8,7 @@ import java.util.List;
  * Created by artemaliev on 07/09/15.
  */
 public class IntSort {
-  public static void qsort (int array[], int left, int right){
+  private static void qsort (int array[], int left, int right){
     int pivot = array[(left + right) / 2];
     int i = left;
     int j = right;
