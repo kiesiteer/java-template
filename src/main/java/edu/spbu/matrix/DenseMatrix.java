@@ -17,8 +17,8 @@ import java.util.Queue;
  */
 public class DenseMatrix implements Matrix
 {
-  public int height, width;
-  public double[][] value;
+  private int height, width;
+  private double[][] value;
 
   public DenseMatrix(double[][] value) {
     this.height = value.length;
@@ -102,6 +102,17 @@ public class DenseMatrix implements Matrix
   @Override public Matrix dmul(Matrix o)
   {
     return null;
+  }
+
+  private boolean equals(DenseMatrix o) {
+    if (this == o) return true;
+    if (this.height != o.height && this.width != o.width) return false;
+    else {
+      for (int i = 0; i < this.height; i++)
+        for (int j =0; j < this.width; j++)
+          if (this.value[i][j] != o.value[i][j]) return false;
+      return true;
+    }
   }
 
   /**
