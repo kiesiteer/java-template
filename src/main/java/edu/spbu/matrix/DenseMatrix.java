@@ -64,6 +64,21 @@ public class DenseMatrix implements Matrix
 
   }
 
+  public DenseMatrix mul(DenseMatrix o) throws Exception {
+    if (this.width != o.height){throw new Exception("Не совпадают размеры матриц");}
+    double[][] res = new double[this.height][o.width];
+
+    for (int i = 0; i < this.height; i++) {
+      for (int j = 0; j < o.width; j++) {
+        res[i][j] = 0;
+        for (int k = 0; k < this.width; k++){
+          res[i][j] += this.value[i][k] * o.value[k][j];
+        }
+      }
+    }
+    return new DenseMatrix(res);
+  }
+
 
 
   /**
