@@ -7,10 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.*;
 
 /**
  * Плотная матрица
@@ -36,17 +33,18 @@ public class DenseMatrix implements Matrix
 
     LinkedList<double[]> rows = new LinkedList<double[]>();
     try {
-      BufferedReader br = new BufferedReader(new FileReader(fileName));
-      String line;
-      if ( (line = br.readLine()) == null) {
+      Scanner sc = new Scanner(new FileReader(fileName));
+      if (!sc.hasNextLine()) {
         throw new Exception("Пустой файл");
       }
+      String line = sc.nextLine();
       double[] row = Arrays.stream(line.split(" ")).mapToDouble(Double::parseDouble).toArray();
       rows.add(row);
       this.width = row.length;
 
 
-      while( (line = br.readLine()) != null ){
+      while( sc.hasNextLine() ){
+        line = sc.nextLine();
         row = Arrays.stream(line.split(" ")).mapToDouble(Double::parseDouble).toArray();
         rows.add(row);
       }
@@ -64,6 +62,9 @@ public class DenseMatrix implements Matrix
 
   }
 
+
+
+
   public DenseMatrix mul(DenseMatrix o) throws Exception {
     if (this.width != o.height){throw new Exception("Не совпадают размеры матриц");}
     double[][] res = new double[this.height][o.width];
@@ -79,8 +80,6 @@ public class DenseMatrix implements Matrix
     return new DenseMatrix(res);
   }
 
-
-
   /**
    * однопоточное умнджение матриц
    * должно поддерживаться для всех 4-х вариантов
@@ -88,8 +87,13 @@ public class DenseMatrix implements Matrix
    * @param o
    * @return
    */
-  @Override public Matrix mul(Matrix o)
-  {
+  @Override public Matrix mul(Matrix o) throws Exception {
+    if (o instanceof DenseMatrix){
+      return (Matrix) this.mul((DenseMatrix) o);
+    }
+    else if (o instanceof SparseMatrix){
+      return null;
+    }
     return null;
   }
 
