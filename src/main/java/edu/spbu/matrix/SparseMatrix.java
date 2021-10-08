@@ -18,9 +18,9 @@ public class SparseMatrix implements Matrix
   private ArrayList<Integer> ptr_row; //массив индексации строк, для индекса i хранит количество ненулевых элементов в строках до i-1 включительно
 
 
-  public SparseMatrix(ArrayList<Double> value, ArrayList<Integer> index_row, ArrayList<Integer> index_column, int width, int height) {
+  public SparseMatrix(ArrayList<Double> value, ArrayList<Integer> ptr_row, ArrayList<Integer> index_column, int width, int height) {
     this.value = value;
-    this.index_row = index_row;
+    this.ptr_row = ptr_row;
     this.index_column = index_column;
     this.width = width;
     this.height = height;
