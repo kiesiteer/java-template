@@ -11,10 +11,11 @@ import java.util.Scanner;
  */
 public class SparseMatrix implements Matrix
 {
+  //в виде compressed sparse row
   private int height, width;
   private ArrayList<Double> value;
-  private ArrayList<Integer> index_row;
-  private ArrayList<Integer> index_column;
+  private ArrayList<Integer> index_column; //массив индексов столбцов
+  private ArrayList<Integer> ptr_row; //массив индексации строк, для индекса i хранит количество ненулевых элементов в строках до i-1 включительно
 
 
   public SparseMatrix(ArrayList<Double> value, ArrayList<Integer> index_row, ArrayList<Integer> index_column, int width, int height) {
@@ -50,15 +51,19 @@ public class SparseMatrix implements Matrix
       }
       sc.reset();
 
+
       double cur_val = 0;
+      ptr_row.add(0);
       for (int i = 0 ; i < this.height ; i++){
-        for (int j = 0 ;j < this.width ; j++)
+        for (int j = 0; j < this.width; j++){
           if( (cur_val = sc.nextDouble()) != 0 ){
-            this.value.add(cur_val);
-            this.index_column.add(j);
-            this.index_row.add(i);
+            value.add(cur_val);
+            this.index_column.add(j); ///?????
           }
+        }
+        ptr_row.add(value.size());
       }
+
 
     }
     catch (Exception e) {
@@ -67,7 +72,12 @@ public class SparseMatrix implements Matrix
 
   }
 
+  public SparseMatrix mul(SparseMatrix o) throws Exception {
+    if (this.width != o.height) {throw new Exception("Не совпадают размеры матриц");}
 
+
+    return null;
+  }
 
 
   /**
