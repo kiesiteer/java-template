@@ -119,11 +119,41 @@ public class SparseMatrix implements Matrix
     return t;
   }
 
-  public SparseMatrix mul(SparseMatrix o) throws Exception {
+  private SparseMatrix mul(SparseMatrix o) throws Exception {
     if (this.width != o.height) {throw new Exception("Не совпадают размеры матриц");}
+    ArrayList<Integer> res_ptr_row = new ArrayList<>();
+    ArrayList<Integer> res_index_column = new ArrayList<>();
+    ArrayList<Double> res_value = new ArrayList<>();
+    res_ptr_row.add(0);//запирающий элемент
+    SparseMatrix ot = o.transposeCSR();
 
-
-    return null;
+    int k = 0;
+    int k2 = 0;
+    for (int i = 0 ; i < this.height ; i++){ //для каждой строки левой
+      k2=0;
+      for (int i2 = 0 ; i2 < ot.height ; i2++){ //для каждого столбца правой (строки правой транспонированной)
+        double x = 0; // результат перемножения векторов
+        for (int j = 0 ; j < (this.ptr_row.get(i+1) - this.ptr_row.get(i)) ; j++){ //для каждого элемента в строке левой
+          for (int j2 = 0 ; j2 < (ot.ptr_row.get(i2+1) - ot.ptr_row.get(i2)) ; j2++){ //для каждого элемента в столбе правой
+            if (this.index_column.get(k+j) == ot.index_column.get(k2+j2)){
+              x += this.value.get(k+j)*ot.value.get(k2+j2);
+              continue;
+            }
+          }
+        }
+        //добавить x в матрицу
+        if (x!=0){
+          res_value.add(x);
+          res_index_column.add(i2);
+        }
+        k2 += (ot.ptr_row.get(i2+1) - ot.ptr_row.get(i2));
+      }
+      res_ptr_row.add(res_value.size());
+      k += (this.ptr_row.get(i+1) - this.ptr_row.get(i));
+    }
+    
+    SparseMatrix res = new SparseMatrix(res_value,res_ptr_row,res_index_column,o.width,this.height);
+    return res;
   }
 
 
@@ -168,12 +198,14 @@ public class SparseMatrix implements Matrix
     return false;
   }
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws Exception {
     SparseMatrix m1 = new SparseMatrix("./SparseMatrix.txt");
-    SparseMatrix m2 = new SparseMatrix("./SparseMatrix.txt");
-    System.out.println(m1.equals(m2));
-    SparseMatrix m3 = m1.transposeCSR();
-    System.out.println(m1.equals(m3));
+    SparseMatrix m2 = new SparseMatrix("./SparseMatrix2.txt");
+    SparseMatrix m3 = m1.mul(m1);
+    System.out.println(m3.equals(m2));
+    //System.out.println(m1.equals(m2));
+    //SparseMatrix m3 = m1.transposeCSR();
+    //System.out.println(m1.equals(m3));
   }
 
 
