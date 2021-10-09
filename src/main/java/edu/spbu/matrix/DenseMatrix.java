@@ -172,12 +172,10 @@ public class DenseMatrix implements Matrix
    */
   @Override public boolean equals(Object o) {
     if (o instanceof DenseMatrix){
-      //return this.mul((DenseMatrix) o);
-      return false;
+      return this.equals((DenseMatrix) o);
     }
     else if (o instanceof SparseMatrix){
-      //return this.mul((SparseMatrix) o);
-      return false;
+      return this.toCSR().equals(o);
     }
     else return false;
   }

@@ -224,9 +224,15 @@ public class SparseMatrix implements Matrix
    * @return
    */
   @Override public boolean equals(Object o) {
-    return false;
-  }
+      if (o instanceof DenseMatrix){
+        return this.equals(((DenseMatrix) o).toCSR());
+      }
+      else if (o instanceof SparseMatrix){
+        return this.equals((SparseMatrix)o);
+      }
+      else return false;
 
+  }
 
 
 }
