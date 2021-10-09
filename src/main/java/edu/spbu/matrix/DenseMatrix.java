@@ -1,7 +1,7 @@
 package edu.spbu.matrix;
 
 
-import com.sun.jmx.remote.internal.ArrayQueue;
+
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -127,5 +127,12 @@ public class DenseMatrix implements Matrix
   @Override public boolean equals(Object o) {
     return false;
   }
+
+
+  public static void main(String[] args) {
+    DenseMatrix m1 = new DenseMatrix("./DenseMatrix.txt");
+
+  }
+
 
 }

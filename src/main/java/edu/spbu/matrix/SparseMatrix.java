@@ -31,6 +31,9 @@ public class SparseMatrix implements Matrix
    * @param fileName
    */
   public SparseMatrix(String fileName) {
+    ptr_row = new ArrayList<Integer>();
+    value = new ArrayList<Double>();
+    index_column = new ArrayList<Integer>();
     try {
       Scanner sc = new Scanner(new FileReader(fileName));
       if (!sc.hasNextLine()){
@@ -49,14 +52,17 @@ public class SparseMatrix implements Matrix
         line = sc.nextLine();
         this.height++;
       }
-      sc.reset();
 
+      sc.reset();
+      sc = new Scanner(new FileReader(fileName));
 
       double cur_val = 0;
       ptr_row.add(0);
+
       for (int i = 0 ; i < this.height ; i++){
         for (int j = 0; j < this.width; j++){
-          if( (cur_val = sc.nextDouble()) != 0 ){
+          cur_val = sc.nextDouble();
+          if(cur_val != 0 ){
             value.add(cur_val);
             this.index_column.add(j); ///?????
           }
@@ -69,7 +75,7 @@ public class SparseMatrix implements Matrix
     catch (Exception e) {
       e.printStackTrace();
     }
-
+    
   }
 
   public SparseMatrix transposeCSR() {
@@ -81,6 +87,10 @@ public class SparseMatrix implements Matrix
 
     ArrayList<ArrayList<Integer>> newcols = new ArrayList<>(width);
     ArrayList<ArrayList<Double>> newvals = new ArrayList<>(width);
+    for (int i = 0 ; i < width ; i++){
+      newcols.add(new ArrayList<Integer>());
+      newvals.add(new ArrayList<Double>());
+    }
 
     int k = 0;
     for (int i = 0 ; i < this.height ; i++){ //для каждой строки
@@ -94,6 +104,7 @@ public class SparseMatrix implements Matrix
         k++;
       }
     }
+
     for(int i = 0 ; i < width; i++ ){
       for (int j = 0 ; j < newvals.get(i).size(); j++){
         value_t.add( newvals.get(i).get(j) );
@@ -102,9 +113,7 @@ public class SparseMatrix implements Matrix
       ptr_row_t.add( ptr_row_t.get(i) + newvals.get(i).size() );
     }
 
-    System.out.println(value_t);
-    System.out.println(index_column_t);
-    System.out.println(ptr_row_t);
+
 
     SparseMatrix t = new SparseMatrix(value_t,ptr_row_t,index_column_t,this.height,this.width);
     return t;
@@ -151,7 +160,7 @@ public class SparseMatrix implements Matrix
   }
 
   public static void main(String[] args) {
-    SparseMatrix m1 = new SparseMatrix("./SparceMatrix.txt");
+    SparseMatrix m1 = new SparseMatrix("./SparseMatrix.txt");
     m1.transposeCSR();
   }
 
