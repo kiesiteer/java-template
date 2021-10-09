@@ -14,8 +14,8 @@ import java.util.*;
  */
 public class DenseMatrix implements Matrix
 {
-  private int height, width;
-  private double[][] value;
+  public int height, width;
+  public double[][] value;
 
   public DenseMatrix(double[][] value) {
     this.height = value.length;
@@ -129,10 +129,12 @@ public class DenseMatrix implements Matrix
   }
 
 
-  public static void main(String[] args) {
-    DenseMatrix m1 = new DenseMatrix("./DenseMatrix.txt");
-
-  }
+/*  public static void main(String[] args) throws Exception {
+    DenseMatrix m1 = new DenseMatrix("./DenseMatrix1.txt");
+    DenseMatrix m2 = new DenseMatrix("./DenseMatrix2.txt");
+    DenseMatrix res = new DenseMatrix("./dm1x2res.txt");
+    System.out.println(m1.mul(m2).equals(res));
+  }*/
 
 
 }

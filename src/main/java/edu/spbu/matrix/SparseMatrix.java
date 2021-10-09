@@ -12,10 +12,10 @@ import java.util.Scanner;
 public class SparseMatrix implements Matrix
 {
   //в виде compressed sparse row
-  private int height, width;
-  private ArrayList<Double> value;
-  private ArrayList<Integer> index_column; //массив индексов столбцов
-  private ArrayList<Integer> ptr_row; //массив индексации строк, для индекса i хранит количество ненулевых элементов в строках до i-1 включительно
+  public int height, width;
+  public ArrayList<Double> value;
+  public ArrayList<Integer> index_column; //массив индексов столбцов
+  public ArrayList<Integer> ptr_row; //массив индексации строк, для индекса i хранит количество ненулевых элементов в строках до i-1 включительно
 
 
   public SparseMatrix(ArrayList<Double> value, ArrayList<Integer> ptr_row, ArrayList<Integer> index_column, int width, int height) {
@@ -151,11 +151,36 @@ public class SparseMatrix implements Matrix
       res_ptr_row.add(res_value.size());
       k += (this.ptr_row.get(i+1) - this.ptr_row.get(i));
     }
-    
+
     SparseMatrix res = new SparseMatrix(res_value,res_ptr_row,res_index_column,o.width,this.height);
     return res;
   }
 
+  private SparseMatrix mul(DenseMatrix o) throws Exception{
+    if (this.width != o.height) {throw new Exception("Не совпадают размеры матриц");}
+    ArrayList<Integer> res_ptr_row = new ArrayList<>();
+    ArrayList<Integer> res_index_column = new ArrayList<>();
+    ArrayList<Double> res_value = new ArrayList<>();
+    res_ptr_row.add(0);//запирающий элемент
+    int k = 0;
+    for (int i = 0 ; i < this.height ; i++) { //для каждой строки левой
+      for (int l = 0 ; l < o.width ; l++){ //для каждого столбца правой
+        double x = 0;
+        for (int j = 0 ; j < (this.ptr_row.get(i+1) - this.ptr_row.get(i)) ; j++){ //для каждого элемента в строке левой
+          x+= value.get(k+j) * o.value[index_column.get(k+j)][l];
+        }
+        if (x != 0){
+          res_value.add(x);
+          res_index_column.add(l);
+        }
+      }
+      res_ptr_row.add(res_value.size());
+      k += (this.ptr_row.get(i+1) - this.ptr_row.get(i));
+    }
+
+    SparseMatrix res = new SparseMatrix(res_value,res_ptr_row,res_index_column,o.width,this.height);
+    return res;
+  }
 
   /**
    * однопоточное умнджение матриц
@@ -200,8 +225,9 @@ public class SparseMatrix implements Matrix
 
   public static void main(String[] args) throws Exception {
     SparseMatrix m1 = new SparseMatrix("./SparseMatrix.txt");
-    SparseMatrix m2 = new SparseMatrix("./SparseMatrix2.txt");
-    SparseMatrix m3 = m1.mul(m1);
+    DenseMatrix d1 = new DenseMatrix("./DenseMatrix3.txt");
+    SparseMatrix m2 = new SparseMatrix("./sm1xdm3_res.txt");
+    SparseMatrix m3 = m1.mul(d1);
     System.out.println(m3.equals(m2));
     //System.out.println(m1.equals(m2));
     //SparseMatrix m3 = m1.transposeCSR();
