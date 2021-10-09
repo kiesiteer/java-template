@@ -75,7 +75,7 @@ public class SparseMatrix implements Matrix
     catch (Exception e) {
       e.printStackTrace();
     }
-    
+
   }
 
   public SparseMatrix transposeCSR() {
@@ -150,6 +150,15 @@ public class SparseMatrix implements Matrix
     return null;
   }
 
+
+  private boolean equals(SparseMatrix o) {
+    if (this == o) return true;
+    if (this.height != o.height && this.width != o.width) return false;
+    else {
+      return (this.value.equals(o.value) && this.index_column.equals(o.index_column) && this.ptr_row.equals(o.ptr_row));
+    }
+  }
+
   /**
    * спавнивает с обоими вариантами
    * @param o
@@ -161,7 +170,10 @@ public class SparseMatrix implements Matrix
 
   public static void main(String[] args) {
     SparseMatrix m1 = new SparseMatrix("./SparseMatrix.txt");
-    m1.transposeCSR();
+    SparseMatrix m2 = new SparseMatrix("./SparseMatrix.txt");
+    System.out.println(m1.equals(m2));
+    SparseMatrix m3 = m1.transposeCSR();
+    System.out.println(m1.equals(m3));
   }
 
 
