@@ -62,6 +62,26 @@ public class DenseMatrix implements Matrix
 
   }
 
+  public SparseMatrix toCSR(){
+    ArrayList<Integer> ptr_row = new ArrayList<Integer>();
+    ArrayList<Double> res_value = new ArrayList<Double>();
+    ArrayList<Integer> index_column = new ArrayList<Integer>();
+    ptr_row.add(0);
+    for (int i = 0 ; i < this.height ; i++){
+      for (int j = 0; j < this.width; j++){
+        double cur_val = value[i][j];
+        if(cur_val != 0 ){
+          res_value.add(cur_val);
+          index_column.add(j);
+        }
+      }
+      ptr_row.add(res_value.size());
+    }
+
+
+    SparseMatrix res = new SparseMatrix(res_value,ptr_row,index_column,this.width,this.height);
+    return res;
+  }
 
   private DenseMatrix mul(DenseMatrix o) throws Exception {
     if (this.width != o.height){throw new Exception("Не совпадают размеры матриц");}
@@ -152,12 +172,14 @@ public class DenseMatrix implements Matrix
    */
   @Override public boolean equals(Object o) {
     if (o instanceof DenseMatrix){
-      return this.mul((DenseMatrix) o);
+      //return this.mul((DenseMatrix) o);
+      return false;
     }
     else if (o instanceof SparseMatrix){
-      return this.mul((SparseMatrix) o);
+      //return this.mul((SparseMatrix) o);
+      return false;
     }
-    else return null;
+    else return false;
   }
 
 }
