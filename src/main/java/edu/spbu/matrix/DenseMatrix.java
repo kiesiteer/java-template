@@ -63,9 +63,7 @@ public class DenseMatrix implements Matrix
   }
 
 
-
-
-  public DenseMatrix mul(DenseMatrix o) throws Exception {
+  private DenseMatrix mul(DenseMatrix o) throws Exception {
     if (this.width != o.height){throw new Exception("Не совпадают размеры матриц");}
     double[][] res = new double[this.height][o.width];
 
@@ -80,6 +78,35 @@ public class DenseMatrix implements Matrix
     return new DenseMatrix(res);
   }
 
+  private SparseMatrix mul(SparseMatrix o) throws Exception{
+    if (this.width != o.height) {throw new Exception("Не совпадают размеры матриц");}
+    ArrayList<Integer> res_ptr_row = new ArrayList<>();
+    ArrayList<Integer> res_index_column = new ArrayList<>();
+    ArrayList<Double> res_value = new ArrayList<>();
+    res_ptr_row.add(0);//запирающий элемент
+    SparseMatrix ot = o.transposeCSR();
+
+    for (int i = 0 ; i < this.height ; i++){
+      int k = 0;
+      for (int i2 = 0 ; i2 < ot.height ; i2++) { //для каждого столбца правой (строки правой транспонированной)
+        double x = 0;
+        for (int j = 0 ; j < (ot.ptr_row.get(i2+1) - ot.ptr_row.get(i2)) ; j++){
+          x += value[i][ot.index_column.get(k+j)] * ot.value.get(k+j);
+        }
+        if (x != 0){
+          res_value.add(x);
+          res_index_column.add(i2);
+        }
+        res_ptr_row.add(res_value.size());
+        k += (ot.ptr_row.get(i2+1) - ot.ptr_row.get(i2));
+      }
+    }
+
+    SparseMatrix res = new SparseMatrix(res_value,res_ptr_row,res_index_column,o.width,this.height);
+    return res;
+  }
+
+
   /**
    * однопоточное умнджение матриц
    * должно поддерживаться для всех 4-х вариантов
@@ -89,12 +116,12 @@ public class DenseMatrix implements Matrix
    */
   @Override public Matrix mul(Matrix o) throws Exception {
     if (o instanceof DenseMatrix){
-      return (Matrix) this.mul((DenseMatrix) o);
+      return this.mul((DenseMatrix) o);
     }
     else if (o instanceof SparseMatrix){
-      return null;
+      return this.mul((SparseMatrix) o);
     }
-    return null;
+    else return null;
   }
 
   /**
@@ -103,8 +130,7 @@ public class DenseMatrix implements Matrix
    * @param o
    * @return
    */
-  @Override public Matrix dmul(Matrix o)
-  {
+  @Override public Matrix dmul(Matrix o) {
     return null;
   }
 
@@ -125,16 +151,13 @@ public class DenseMatrix implements Matrix
    * @return
    */
   @Override public boolean equals(Object o) {
-    return false;
+    if (o instanceof DenseMatrix){
+      return this.mul((DenseMatrix) o);
+    }
+    else if (o instanceof SparseMatrix){
+      return this.mul((SparseMatrix) o);
+    }
+    else return null;
   }
-
-
-/*  public static void main(String[] args) throws Exception {
-    DenseMatrix m1 = new DenseMatrix("./DenseMatrix1.txt");
-    DenseMatrix m2 = new DenseMatrix("./DenseMatrix2.txt");
-    DenseMatrix res = new DenseMatrix("./dm1x2res.txt");
-    System.out.println(m1.mul(m2).equals(res));
-  }*/
-
 
 }

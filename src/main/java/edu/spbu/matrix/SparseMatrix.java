@@ -189,9 +189,14 @@ public class SparseMatrix implements Matrix
    * @param o
    * @return
    */
-  @Override public Matrix mul(Matrix o)
-  {
-    return null;
+  @Override public Matrix mul(Matrix o) throws Exception {
+    if (o instanceof DenseMatrix){
+      return this.mul((DenseMatrix) o);
+    }
+    else if (o instanceof SparseMatrix){
+      return this.mul((SparseMatrix) o);
+    }
+    else return null;
   }
 
   /**
@@ -200,8 +205,7 @@ public class SparseMatrix implements Matrix
    * @param o
    * @return
    */
-  @Override public Matrix dmul(Matrix o)
-  {
+  @Override public Matrix dmul(Matrix o) {
     return null;
   }
 
@@ -221,17 +225,6 @@ public class SparseMatrix implements Matrix
    */
   @Override public boolean equals(Object o) {
     return false;
-  }
-
-  public static void main(String[] args) throws Exception {
-    SparseMatrix m1 = new SparseMatrix("./SparseMatrix.txt");
-    DenseMatrix d1 = new DenseMatrix("./DenseMatrix3.txt");
-    SparseMatrix m2 = new SparseMatrix("./sm1xdm3_res.txt");
-    SparseMatrix m3 = m1.mul(d1);
-    System.out.println(m3.equals(m2));
-    //System.out.println(m1.equals(m2));
-    //SparseMatrix m3 = m1.transposeCSR();
-    //System.out.println(m1.equals(m3));
   }
 
 
