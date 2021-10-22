@@ -8,6 +8,9 @@ import java.io.FileReader;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * Плотная матрица
@@ -150,8 +153,44 @@ public class DenseMatrix implements Matrix
    * @param o
    * @return
    */
-  @Override public Matrix dmul(Matrix o) {
+  @Override public Matrix dmul(Matrix o) throws Exception {
+    if (o instanceof DenseMatrix){
+      return this.dmul((DenseMatrix) o);
+    }
     return null;
+  }
+  private DenseMatrix dmul (DenseMatrix o) throws Exception {
+    if (this.width != o.height){throw new Exception("Не совпадают размеры матриц");}
+    double[][] res = new double[this.height][o.width];
+
+    ExecutorService executorService = Executors.newWorkStealingPool();
+
+    ArrayList<Future> tasks = new ArrayList<>();
+    for (int i = 0; i < this.height; i++) {
+      int finalI = i;
+      tasks.add(executorService.submit(()->{
+        for (int j = 0; j < o.width; j++) {
+          res[finalI][j] = 0;
+          for (int k = 0; k < this.width; k++){
+            res[finalI][j] += this.value[finalI][k] * o.value[k][j];
+          }
+        }
+      }));
+    }
+
+    for (Future task: tasks) {
+        task.get();
+    }
+
+    executorService.shutdown();
+//    for(int i = 0 ; i < this.height ; i++){
+//      for(int j = 0 ; j < o.width ; j++){
+//        System.out.print(res[i][j] + " ");
+//      }
+//      System.out.println();
+//    }
+
+    return new DenseMatrix(res);
   }
 
   private boolean equals(DenseMatrix o) {

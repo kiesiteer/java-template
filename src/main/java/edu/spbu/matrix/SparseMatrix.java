@@ -206,9 +206,15 @@ public class SparseMatrix implements Matrix
    * @return
    */
   @Override public Matrix dmul(Matrix o) {
+    if (o instanceof SparseMatrix){
+      return this.dmul((SparseMatrix) o);
+    }
     return null;
   }
+  private SparseMatrix dmul(SparseMatrix o){
 
+    return null;
+  }
 
   private boolean equals(SparseMatrix o) {
     if (this == o) return true;
