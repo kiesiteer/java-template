@@ -4,7 +4,11 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Scanner;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * Разряженная матрица
@@ -205,16 +209,72 @@ public class SparseMatrix implements Matrix
    * @param o
    * @return
    */
-  @Override public Matrix dmul(Matrix o) {
+  @Override public Matrix dmul(Matrix o) throws Exception {
     if (o instanceof SparseMatrix){
       return this.dmul((SparseMatrix) o);
     }
     return null;
   }
-  private SparseMatrix dmul(SparseMatrix o){
+  private SparseMatrix dmul(SparseMatrix o) throws Exception {
+    if (this.width != o.height) {throw new Exception("Не совпадают размеры матриц");}
+    ArrayList<Integer> res_ptr_row = new ArrayList<>();
+    ArrayList<Integer> res_index_column = new ArrayList<>();
+    ArrayList<Double> res_value = new ArrayList<>();
+    res_ptr_row.add(0);
+    SparseMatrix ot = o.transposeCSR();
 
-    return null;
+    int upperHeight = this.height / 2;
+    int lowerHeight = this.height - upperHeight;
+    ArrayList<Integer> upper_ptr_row = (ArrayList<Integer>) this.ptr_row.subList(0,upperHeight);
+    ArrayList<Integer> upper_index_column = (ArrayList<Integer>) this.index_column.subList(0, upper_ptr_row.get(upper_ptr_row.size()-1));
+    ArrayList<Double> upper_value = (ArrayList<Double>) this.value.subList(0, upper_ptr_row.get(upper_ptr_row.size()-1) );
+
+    ArrayList<Integer> lower_ptr_row = (ArrayList<Integer>) this.ptr_row.subList(upperHeight+1,this.height-1);
+    for(int a :lower_ptr_row){ a -= upper_index_column.get( upper_ptr_row.size()-1  ); }
+    lower_ptr_row.add(0, 0);
+    ArrayList<Integer> lower_index_column = (ArrayList<Integer>) this.index_column.subList(upper_ptr_row.get(upper_ptr_row.size()-1)+1, this.ptr_row.size()-1);
+    ArrayList<Double> lower_value = (ArrayList<Double>) this.value.subList(upper_ptr_row.get(upper_ptr_row.size()-1)+1, this.ptr_row.size()-1);
+    lower_ptr_row.add(0);
+
+    SparseMatrix upper = new SparseMatrix(upper_value,upper_ptr_row,upper_index_column,this.width,upperHeight);
+    SparseMatrix lower = new SparseMatrix(lower_value,lower_ptr_row,lower_index_column,this.width,lowerHeight);
+    SparseMatrix [] res = new SparseMatrix[2];
+    Thread t1 = new Thread( ()->{
+      try {
+         res[0] = upper.mul(ot);
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    });
+    t1.start();
+    Thread t2 = new Thread( ()->{
+      try {
+        res[1] = lower.mul(ot);
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    });
+    t2.start();
+    t1.join();
+    t2.join();
+
+    res_value = res[0].value;
+    res_value.addAll(res[1].value);
+
+    res_index_column = res[0].index_column;
+    res_index_column.addAll(res[1].index_column);
+
+    res_ptr_row = res[0].ptr_row;
+    res[1].ptr_row.remove(0);
+    for(int a :res[1].ptr_row){
+      a += res_ptr_row.get(res_ptr_row.size()-1);
+    }
+    res_ptr_row.addAll(res[1].ptr_row);
+    SparseMatrix result = new SparseMatrix(res_value,res_ptr_row,res_index_column,o.width,this.height);
+    return result;
   }
+
+
 
   private boolean equals(SparseMatrix o) {
     if (this == o) return true;
@@ -243,4 +303,21 @@ public class SparseMatrix implements Matrix
 
 }
 
+class CSRvalue implements Comparable{
+  public int colIndex;
+  public double value;
+  public int placeInRow;
+  public CSRvalue(int placeInRow, double value, int colIndex){
+    this.placeInRow = placeInRow;
+    this.value = value;
+    this.colIndex = colIndex;
+  }
+  @Override
+  public int compareTo(Object o) {
+    if (o instanceof CSRvalue){
+      return this.placeInRow-((CSRvalue) o).placeInRow;
+    }
+    return 0;
+  }
 
+}

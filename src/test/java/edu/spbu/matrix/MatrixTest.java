@@ -79,4 +79,18 @@ public class MatrixTest
 
     assertEquals(expected, res);
   }
+
+  @Test
+  public void dmulSS() throws Exception {
+    long startTime = System.nanoTime();
+
+    Matrix s1 = new DenseMatrix("./matrix_tests/SparseMatrix1.txt");
+    Matrix s2 = new DenseMatrix("./matrix_tests/SparseMatrix1.txt");
+    Matrix expected = new DenseMatrix("./matrix_tests/sm1xsm1_res.txt");
+    Matrix res = s1.dmul(s2);
+    long estimatedTime = System.nanoTime() - startTime;
+    System.out.println("Execution time(ms) " + (estimatedTime/ 1000000));
+    assertEquals(expected, res);
+  }
+
 }

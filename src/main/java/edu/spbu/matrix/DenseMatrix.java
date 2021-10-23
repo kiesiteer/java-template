@@ -164,8 +164,8 @@ public class DenseMatrix implements Matrix
     double[][] res = new double[this.height][o.width];
 
     ExecutorService executorService = Executors.newWorkStealingPool();
-
     ArrayList<Future> tasks = new ArrayList<>();
+
     for (int i = 0; i < this.height; i++) {
       int finalI = i;
       tasks.add(executorService.submit(()->{
