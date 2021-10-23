@@ -225,23 +225,27 @@ public class SparseMatrix implements Matrix
 
     int upperHeight = this.height / 2;
     int lowerHeight = this.height - upperHeight;
-    ArrayList<Integer> upper_ptr_row = (ArrayList<Integer>) this.ptr_row.subList(0,upperHeight);
-    ArrayList<Integer> upper_index_column = (ArrayList<Integer>) this.index_column.subList(0, upper_ptr_row.get(upper_ptr_row.size()-1));
-    ArrayList<Double> upper_value = (ArrayList<Double>) this.value.subList(0, upper_ptr_row.get(upper_ptr_row.size()-1) );
+    ArrayList<Integer> upper_ptr_row = new ArrayList<Integer> (this.ptr_row.subList(0,upperHeight+1));
+    ArrayList<Integer> upper_index_column = new ArrayList<Integer>(this.index_column.subList(0, upper_ptr_row.get(upper_ptr_row.size()-1)));
+    ArrayList<Double> upper_value = new ArrayList<Double>(this.value.subList(0, upper_ptr_row.get(upper_ptr_row.size()-1)) );
 
-    ArrayList<Integer> lower_ptr_row = (ArrayList<Integer>) this.ptr_row.subList(upperHeight+1,this.height-1);
-    for(int a :lower_ptr_row){ a -= upper_index_column.get( upper_ptr_row.size()-1  ); }
+
+    ArrayList<Integer> lower_ptr_row = new ArrayList<Integer> (this.ptr_row.subList(upperHeight+1,this.height+1));
+    for (int k = 0 ; k <lower_ptr_row.size() ; k++){
+      lower_ptr_row.add(k , lower_ptr_row.get(k) - upper_ptr_row.get( upper_ptr_row.size()-1  ) );
+      lower_ptr_row.remove(k+1);
+    }
     lower_ptr_row.add(0, 0);
-    ArrayList<Integer> lower_index_column = (ArrayList<Integer>) this.index_column.subList(upper_ptr_row.get(upper_ptr_row.size()-1)+1, this.ptr_row.size()-1);
-    ArrayList<Double> lower_value = (ArrayList<Double>) this.value.subList(upper_ptr_row.get(upper_ptr_row.size()-1)+1, this.ptr_row.size()-1);
-    lower_ptr_row.add(0);
+    ArrayList<Integer> lower_index_column = new ArrayList<Integer>(this.index_column.subList(upper_ptr_row.get(upper_ptr_row.size()-1), this.index_column.size()) );
+    ArrayList<Double> lower_value = new ArrayList<Double> (this.value.subList(upper_ptr_row.get(upper_ptr_row.size()-1), this.index_column.size()) );
 
     SparseMatrix upper = new SparseMatrix(upper_value,upper_ptr_row,upper_index_column,this.width,upperHeight);
     SparseMatrix lower = new SparseMatrix(lower_value,lower_ptr_row,lower_index_column,this.width,lowerHeight);
-    SparseMatrix [] res = new SparseMatrix[2];
+    SparseMatrix res [] = new SparseMatrix[2];
+
     Thread t1 = new Thread( ()->{
       try {
-         res[0] = upper.mul(ot);
+         res[0] = upper.mul(o);
       } catch (Exception e) {
         e.printStackTrace();
       }
@@ -249,7 +253,7 @@ public class SparseMatrix implements Matrix
     t1.start();
     Thread t2 = new Thread( ()->{
       try {
-        res[1] = lower.mul(ot);
+        res[1] = lower.mul(o);
       } catch (Exception e) {
         e.printStackTrace();
       }
@@ -266,10 +270,11 @@ public class SparseMatrix implements Matrix
 
     res_ptr_row = res[0].ptr_row;
     res[1].ptr_row.remove(0);
-    for(int a :res[1].ptr_row){
-      a += res_ptr_row.get(res_ptr_row.size()-1);
+
+    for (int k = 0 ; k <res[1].ptr_row.size() ; k++){
+      res_ptr_row.add( res[1].ptr_row.get(k) + res[0].ptr_row.get(res[0].ptr_row.size()-1) );
     }
-    res_ptr_row.addAll(res[1].ptr_row);
+
     SparseMatrix result = new SparseMatrix(res_value,res_ptr_row,res_index_column,o.width,this.height);
     return result;
   }

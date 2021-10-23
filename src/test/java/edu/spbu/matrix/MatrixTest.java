@@ -44,7 +44,7 @@ public class MatrixTest
     long startTime = System.nanoTime();
 
     Matrix d = new DenseMatrix("./matrix_tests/DenseMatrix3.txt");
-    Matrix s = new DenseMatrix("./matrix_tests/SparseMatrix1.txt");
+    Matrix s = new SparseMatrix("./matrix_tests/SparseMatrix1.txt");
     Matrix expected = new DenseMatrix("./matrix_tests/sm1xdm3_res.txt");
     Matrix res = s.mul(d);
     long estimatedTime = System.nanoTime() - startTime;
@@ -56,9 +56,9 @@ public class MatrixTest
   public void mulSS() throws Exception {
     long startTime = System.nanoTime();
 
-    Matrix s1 = new DenseMatrix("./matrix_tests/SparseMatrix1.txt");
-    Matrix s2 = new DenseMatrix("./matrix_tests/SparseMatrix1.txt");
-    Matrix expected = new DenseMatrix("./matrix_tests/sm1xsm1_res.txt");
+    Matrix s1 = new SparseMatrix("./matrix_tests/SparseMatrix1.txt");
+    Matrix s2 = new SparseMatrix("./matrix_tests/SparseMatrix1.txt");
+    Matrix expected = new SparseMatrix("./matrix_tests/sm1xsm1_res.txt");
     Matrix res = s1.mul(s2);
     long estimatedTime = System.nanoTime() - startTime;
     System.out.println("Execution time(ms) " + (estimatedTime/ 1000000));
@@ -84,8 +84,8 @@ public class MatrixTest
   public void dmulSS() throws Exception {
     long startTime = System.nanoTime();
 
-    Matrix s1 = new DenseMatrix("./matrix_tests/SparseMatrix1.txt");
-    Matrix s2 = new DenseMatrix("./matrix_tests/SparseMatrix1.txt");
+    Matrix s1 = new SparseMatrix("./matrix_tests/SparseMatrix1.txt");
+    Matrix s2 = new SparseMatrix("./matrix_tests/SparseMatrix1.txt");
     Matrix expected = new DenseMatrix("./matrix_tests/sm1xsm1_res.txt");
     Matrix res = s1.dmul(s2);
     long estimatedTime = System.nanoTime() - startTime;
