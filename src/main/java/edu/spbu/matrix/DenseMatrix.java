@@ -194,12 +194,13 @@ public class DenseMatrix implements Matrix
   }
 
   private boolean equals(DenseMatrix o) {
+    double eps = 0.001;
     if (this == o) return true;
     if (this.height != o.height && this.width != o.width) return false;
     else {
       for (int i = 0; i < this.height; i++)
         for (int j =0; j < this.width; j++)
-          if (this.value[i][j] != o.value[i][j]) return false;
+          if (Math.abs(this.value[i][j] - o.value[i][j]) > eps) return false;
       return true;
     }
   }
@@ -210,6 +211,7 @@ public class DenseMatrix implements Matrix
    * @return
    */
   @Override public boolean equals(Object o) {
+
     if (o instanceof DenseMatrix){
       return this.equals((DenseMatrix) o);
     }

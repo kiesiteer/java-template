@@ -3,9 +3,8 @@ package edu.spbu.matrix;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Scanner;
+import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -215,78 +214,102 @@ public class SparseMatrix implements Matrix
     }
     return null;
   }
-  private SparseMatrix dmul(SparseMatrix o) throws Exception {
-    if (this.width != o.height) {throw new Exception("Не совпадают размеры матриц");}
-    ArrayList<Integer> res_ptr_row = new ArrayList<>();
-    ArrayList<Integer> res_index_column = new ArrayList<>();
-    ArrayList<Double> res_value = new ArrayList<>();
-    res_ptr_row.add(0);
-    SparseMatrix ot = o.transposeCSR();
 
-    int upperHeight = this.height / 2;
-    int lowerHeight = this.height - upperHeight;
-    ArrayList<Integer> upper_ptr_row = new ArrayList<Integer> (this.ptr_row.subList(0,upperHeight+1));
-    ArrayList<Integer> upper_index_column = new ArrayList<Integer>(this.index_column.subList(0, upper_ptr_row.get(upper_ptr_row.size()-1)));
-    ArrayList<Double> upper_value = new ArrayList<Double>(this.value.subList(0, upper_ptr_row.get(upper_ptr_row.size()-1)) );
+private SparseMatrix dmul(SparseMatrix o) throws Exception {
+  if (this.width != o.height){throw new Exception("Не совпадают размеры матриц");}
+  int threadCount = Runtime.getRuntime().availableProcessors();
+  int submatrixHeight = this.height / threadCount;
+  int residueHeight = this.height % threadCount;
+  int submatricesCount = threadCount;
+  if (residueHeight != 0) submatricesCount++;
 
 
-    ArrayList<Integer> lower_ptr_row = new ArrayList<Integer> (this.ptr_row.subList(upperHeight+1,this.height+1));
-    for (int k = 0 ; k <lower_ptr_row.size() ; k++){
-      lower_ptr_row.add(k , lower_ptr_row.get(k) - upper_ptr_row.get( upper_ptr_row.size()-1  ) );
-      lower_ptr_row.remove(k+1);
-    }
-    lower_ptr_row.add(0, 0);
-    ArrayList<Integer> lower_index_column = new ArrayList<Integer>(this.index_column.subList(upper_ptr_row.get(upper_ptr_row.size()-1), this.index_column.size()) );
-    ArrayList<Double> lower_value = new ArrayList<Double> (this.value.subList(upper_ptr_row.get(upper_ptr_row.size()-1), this.index_column.size()) );
+  Future [] tasks = new Future[submatricesCount];
 
-    SparseMatrix upper = new SparseMatrix(upper_value,upper_ptr_row,upper_index_column,this.width,upperHeight);
-    SparseMatrix lower = new SparseMatrix(lower_value,lower_ptr_row,lower_index_column,this.width,lowerHeight);
-    SparseMatrix res [] = new SparseMatrix[2];
+  ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
+  for(int i = 0 ; i < threadCount ; i++){
 
-    Thread t1 = new Thread( ()->{
+    int fi = i;
+    tasks[i]=executorService.submit(()->{
+      //выдрать подматрицу из this
+      ArrayList<Integer> submatrix_ptr_row = new ArrayList<Integer> (this.ptr_row.subList(fi * submatrixHeight + 1,(fi + 1) * submatrixHeight + 1));
+      ArrayList<Integer> submatrix_index_column = new ArrayList<Integer>( this.index_column.subList( this.ptr_row.get(fi * submatrixHeight) , this.ptr_row.get((fi+1) * submatrixHeight) ) );
+      ArrayList<Double> submatrix_value = new ArrayList<Double>( this.value.subList( this.ptr_row.get(fi * submatrixHeight) , this.ptr_row.get((fi+1) * submatrixHeight) ) );
+
+      //вычесть из submatrix_ptr_row и добавить 0 в начало
+      for (int k = 0 ; k < submatrix_ptr_row.size() ; k++){
+        submatrix_ptr_row.add(k , submatrix_ptr_row.get(k) - this.ptr_row.get(fi * submatrixHeight) );
+        submatrix_ptr_row.remove(k+1);
+      }
+      submatrix_ptr_row.add(0, 0);
+
+      SparseMatrix submatrix = new SparseMatrix(submatrix_value,submatrix_ptr_row,submatrix_index_column,this.width,submatrixHeight);
+      //помножить подматрицу на o, получить resSubmatrix
+
+
+
       try {
-         res[0] = upper.mul(o);
+        SparseMatrix resSubmatrix = submatrix.mul(o);
+        return resSubmatrix;
       } catch (Exception e) {
         e.printStackTrace();
+        return null;
       }
     });
-    t1.start();
-    Thread t2 = new Thread( ()->{
-      try {
-        res[1] = lower.mul(o);
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
-    });
-    t2.start();
-    t1.join();
-    t2.join();
-
-    res_value = res[0].value;
-    res_value.addAll(res[1].value);
-
-    res_index_column = res[0].index_column;
-    res_index_column.addAll(res[1].index_column);
-
-    res_ptr_row = res[0].ptr_row;
-    res[1].ptr_row.remove(0);
-
-    for (int k = 0 ; k <res[1].ptr_row.size() ; k++){
-      res_ptr_row.add( res[1].ptr_row.get(k) + res[0].ptr_row.get(res[0].ptr_row.size()-1) );
-    }
-
-    SparseMatrix result = new SparseMatrix(res_value,res_ptr_row,res_index_column,o.width,this.height);
-    return result;
   }
+  if (residueHeight != 0){
+    tasks[threadCount]=executorService.submit(()->{
+      ArrayList<Integer> submatrix_ptr_row = new ArrayList<Integer> (this.ptr_row.subList(threadCount * submatrixHeight + 1, this.ptr_row.size() ));
+      ArrayList<Integer> submatrix_index_column = new ArrayList<Integer>( this.index_column.subList( this.ptr_row.get(threadCount * submatrixHeight) , this.index_column.size() ) );
+      ArrayList<Double> submatrix_value = new ArrayList<Double>( this.value.subList( this.ptr_row.get(threadCount * submatrixHeight) , this.value.size()) );
+      for (int k = 0 ; k <submatrix_ptr_row.size() ; k++){
+        submatrix_ptr_row.add(k , submatrix_ptr_row.get(k) - this.ptr_row.get(threadCount * submatrixHeight) );
+        submatrix_ptr_row.remove(k+1);
+      }
+      submatrix_ptr_row.add(0, 0);
+      SparseMatrix submatrix = new SparseMatrix(submatrix_value,submatrix_ptr_row,submatrix_index_column,this.width,residueHeight);
+
+      try {
+        SparseMatrix resSubmatrix = submatrix.mul(o);
+        return resSubmatrix;
+      } catch (Exception e) {
+        e.printStackTrace();
+        return null;
+      }
+    });
+  }
+
+  ArrayList<Integer> res_ptr_row = new ArrayList<>();
+  ArrayList<Integer> res_index_column = new ArrayList<>();
+  ArrayList<Double> res_value = new ArrayList<>();
+  res_ptr_row.add(0);
+
+
+  for (int i = 0 ; i < submatricesCount ; i++){
+    SparseMatrix cur = (SparseMatrix) tasks[i].get();
+    cur.ptr_row.remove(0);
+    cur.ptr_row.replaceAll(x -> x + res_ptr_row.get(res_ptr_row.size()-1));
+    res_ptr_row.addAll(cur.ptr_row);
+    res_index_column.addAll(cur.index_column);
+    res_value.addAll(cur.value);
+  }
+
+  executorService.shutdown();
+  SparseMatrix result = new SparseMatrix(res_value,res_ptr_row,res_index_column,o.width,this.height);
+  return result;
+}
 
 
 
   private boolean equals(SparseMatrix o) {
+    double eps = 0.001;
     if (this == o) return true;
     if (this.height != o.height && this.width != o.width) return false;
-    else {
-      return (this.value.equals(o.value) && this.index_column.equals(o.index_column) && this.ptr_row.equals(o.ptr_row));
+    if ((this.index_column.equals(o.index_column) && this.ptr_row.equals(o.ptr_row)) == false) return false;
+    for (int i = 0 ; i < this.value.size() ;i++){
+      if (Math.abs(this.value.get(i) - o.value.get(i)) > eps) return false;
     }
+    return true;
   }
 
   /**
